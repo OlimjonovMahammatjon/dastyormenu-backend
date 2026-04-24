@@ -32,7 +32,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user role."""
-        queryset = Organization.objects.filter(is_active=True)
+        queryset = Organization.objects.all()
         
         # For authenticated users, apply role-based filtering
         if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
@@ -41,7 +41,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             elif self.request.user.userprofile.organization:
                 return Organization.objects.filter(id=self.request.user.userprofile.organization_id)
         
-        # For public access, return only active organizations
+        # For public access, return all organizations
         return queryset
     
     @action(detail=True, methods=['post'])

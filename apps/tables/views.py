@@ -18,12 +18,28 @@ class TableViewSet(OrganizationMixin, viewsets.ModelViewSet):
     
     def get_permissions(self):
         """
-        Public access for qr_lookup.
-        Authentication required for other actions.
+        Public access for list, retrieve, qr_lookup.
+        Authentication required for create, update, delete, qr_code, regenerate_qr.
         """
-        if self.action == 'qr_lookup':
+        if self.action in ['list', 'retrieve', 'qr_lookup']:
             return [AllowAny()]
         return [IsAuthenticated(), IsManagerOrAbove()]
+    
+    def get_queryset(self):
+        """Filter tables."""
+        queryset = Table.objects.all()
+        
+        # Filter by organization_id if provided
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        
+        # For authenticated users, filter by their organization
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            if self.request.user.userprofile.organization:
+                queryset = queryset.filter(organization=self.request.user.userprofile.organization)
+        
+        return queryset
     
     def get_serializer_class(self):
         """Return appropriate serializer."""
