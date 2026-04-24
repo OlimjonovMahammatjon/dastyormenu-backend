@@ -2,7 +2,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import Notification
 from .serializers import NotificationSerializer
@@ -13,16 +13,35 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Public access for list and retrieve.
+        Authentication required for mark_read and mark_all_read.
+        """
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
     
     def get_queryset(self):
-        """Filter notifications for current user."""
-        user = self.request.user
-        if hasattr(user, 'userprofile'):
-            return Notification.objects.filter(
-                recipient=user.userprofile
-            )
-        return Notification.objects.none()
+        """Filter notifications."""
+        queryset = Notification.objects.all()
+        
+        # Filter by organization_id if provided
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            queryset = queryset.filter(recipient__organization_id=organization_id)
+        
+        # Filter by recipient_id if provided
+        recipient_id = self.request.query_params.get('recipient_id')
+        if recipient_id:
+            queryset = queryset.filter(recipient_id=recipient_id)
+        
+        # For authenticated users, filter by current user
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            queryset = queryset.filter(recipient=self.request.user.userprofile)
+        
+        return queryset
     
     @extend_schema(
         request=None,

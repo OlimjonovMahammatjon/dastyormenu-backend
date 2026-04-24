@@ -2,7 +2,7 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Subscription
 from .serializers import SubscriptionSerializer
 from apps.users.permissions import IsManagerOrAbove
@@ -13,16 +13,31 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
-    permission_classes = [IsAuthenticated, IsManagerOrAbove]
+    
+    def get_permissions(self):
+        """
+        Public access for list and retrieve.
+        Authentication required for current and history.
+        """
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsManagerOrAbove()]
     
     def get_queryset(self):
-        """Filter subscriptions by organization."""
-        user = self.request.user
-        if hasattr(user, 'userprofile'):
-            return Subscription.objects.filter(
-                organization=user.userprofile.organization
-            )
-        return Subscription.objects.none()
+        """Filter subscriptions."""
+        queryset = Subscription.objects.all()
+        
+        # Filter by organization_id if provided
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        
+        # For authenticated users, filter by their organization
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            if self.request.user.userprofile.organization:
+                queryset = queryset.filter(organization=self.request.user.userprofile.organization)
+        
+        return queryset
     
     @action(detail=False, methods=['get'])
     def current(self, request):

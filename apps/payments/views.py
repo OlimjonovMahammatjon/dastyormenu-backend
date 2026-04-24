@@ -2,7 +2,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from .models import Payment
 from .serializers import PaymentSerializer, PaymentConfirmSerializer
@@ -15,7 +15,36 @@ class PaymentViewSet(OrganizationMixin, viewsets.ModelViewSet):
     
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = [IsAuthenticated, IsWaiterOrAbove]
+    
+    def get_permissions(self):
+        """
+        Public access for list and retrieve.
+        Authentication required for create, update, delete, confirm.
+        """
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsWaiterOrAbove()]
+    
+    def get_queryset(self):
+        """Filter payments."""
+        queryset = Payment.objects.all()
+        
+        # Filter by organization_id if provided
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            queryset = queryset.filter(order__organization_id=organization_id)
+        
+        # Filter by order_id if provided
+        order_id = self.request.query_params.get('order_id')
+        if order_id:
+            queryset = queryset.filter(order_id=order_id)
+        
+        # For authenticated users, filter by their organization
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            if self.request.user.userprofile.organization:
+                queryset = queryset.filter(order__organization=self.request.user.userprofile.organization)
+        
+        return queryset
     
     @extend_schema(
         request=PaymentConfirmSerializer,

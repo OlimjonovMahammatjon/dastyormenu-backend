@@ -20,21 +20,50 @@ class OrderViewSet(OrganizationMixin, viewsets.ModelViewSet):
     """ViewSet for managing orders."""
     
     queryset = Order.objects.all()
-    permission_classes = [IsAuthenticated, IsWaiterOrAbove]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['status', 'table', 'waiter']
     ordering_fields = ['created_at', 'updated_at']
     ordering = ['-created_at']
     
+    def get_permissions(self):
+        """
+        Public access for list, retrieve, create.
+        Authentication required for update, delete, and custom actions.
+        """
+        if self.action in ['list', 'retrieve', 'create']:
+            return [AllowAny()]
+        elif self.action in ['update_status', 'active']:
+            return [IsAuthenticated(), IsChefOrAbove()]
+        elif self.action == 'my_tables':
+            return [IsAuthenticated(), IsWaiterOrAbove()]
+        return [IsAuthenticated(), IsWaiterOrAbove()]
+    
     def get_serializer_class(self):
         """Return appropriate serializer."""
         if self.action == 'list':
             return OrderListSerializer
+        elif self.action == 'create':
+            return PublicOrderSerializer
         return OrderSerializer
     
     def get_queryset(self):
         """Filter orders with date range support."""
-        queryset = super().get_queryset()
+        queryset = Order.objects.all()
+        
+        # Filter by organization_id if provided
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        
+        # Filter by table_id if provided
+        table_id = self.request.query_params.get('table_id')
+        if table_id:
+            queryset = queryset.filter(table_id=table_id)
+        
+        # For authenticated users, filter by their organization
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            if self.request.user.userprofile.organization:
+                queryset = queryset.filter(organization=self.request.user.userprofile.organization)
         
         # Date filtering
         date_from = self.request.query_params.get('date_from')
@@ -48,13 +77,8 @@ class OrderViewSet(OrganizationMixin, viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        """Set waiter from table assignment."""
-        table = serializer.validated_data.get('table')
-        waiter = table.assigned_waiter if table else None
-        serializer.save(
-            organization=self.request.user.userprofile.organization,
-            waiter=waiter
-        )
+        """Create order from QR code (public)."""
+        serializer.save()
     
     @extend_schema(
         request=OrderStatusSerializer,
@@ -100,11 +124,11 @@ class OrderViewSet(OrganizationMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-# Public endpoints (no auth required)
+# Public endpoints (no auth required) - DEPRECATED, use OrderViewSet instead
 @extend_schema(
     request=PublicOrderSerializer,
     responses={201: PublicOrderSerializer},
-    description='Public endpoint for creating orders via QR code'
+    description='Public endpoint for creating orders via QR code (DEPRECATED: use POST /api/orders/ instead)'
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
