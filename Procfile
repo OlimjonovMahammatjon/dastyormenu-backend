@@ -1,3 +1,3 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p $PORT config.asgi:application
+web: bash scripts/start.sh
 worker: celery -A config worker -l info
 beat: celery -A config beat -l info
