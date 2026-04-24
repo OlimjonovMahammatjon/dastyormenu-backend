@@ -40,6 +40,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         email = validated_data.pop('email', None)
         password = validated_data.pop('password', None)
         pin_code = validated_data.pop('pin_code', None)
+        role = validated_data.get('role', 'waiter')
         
         # Create Django user
         user = User.objects.create_user(
@@ -47,6 +48,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             email=email,
             password=password
         )
+        
+        # Super admin doesn't need organization
+        if role == 'super_admin' and 'organization' not in validated_data:
+            validated_data['organization'] = None
         
         # Create profile
         profile = UserProfile.objects.create(user=user, **validated_data)

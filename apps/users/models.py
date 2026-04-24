@@ -37,7 +37,10 @@ class UserProfile(models.Model):
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
-        related_name='users'
+        related_name='users',
+        null=True,
+        blank=True,
+        help_text='Organization (not required for super_admin)'
     )
     full_name = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
