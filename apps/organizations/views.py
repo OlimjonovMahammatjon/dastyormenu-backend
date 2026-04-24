@@ -2,7 +2,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Organization
 from .serializers import OrganizationSerializer, OrganizationListSerializer
@@ -13,8 +13,16 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing organizations."""
     
     queryset = Organization.objects.all()
-    permission_classes = [IsAuthenticated, IsSuperAdmin]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get_permissions(self):
+        """
+        Public access for list and retrieve.
+        Authentication required for create, update, delete.
+        """
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsSuperAdmin()]
     
     def get_serializer_class(self):
         """Return appropriate serializer class."""
@@ -24,12 +32,17 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user role."""
-        user = self.request.user
-        if hasattr(user, 'userprofile'):
-            if user.userprofile.role == 'super_admin':
+        queryset = Organization.objects.filter(is_active=True)
+        
+        # For authenticated users, apply role-based filtering
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'userprofile'):
+            if self.request.user.userprofile.role == 'super_admin':
                 return Organization.objects.all()
-            return Organization.objects.filter(id=user.userprofile.organization_id)
-        return Organization.objects.none()
+            elif self.request.user.userprofile.organization:
+                return Organization.objects.filter(id=self.request.user.userprofile.organization_id)
+        
+        # For public access, return only active organizations
+        return queryset
     
     @action(detail=True, methods=['post'])
     def activate_subscription(self, request, pk=None):
