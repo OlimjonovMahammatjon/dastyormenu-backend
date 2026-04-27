@@ -61,10 +61,13 @@ class MenuListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for menu list."""
     
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category_id = serializers.UUIDField(source='category.id', read_only=True)
+    price_uzs = serializers.ReadOnlyField()
     
     class Meta:
         model = Menu
         fields = [
-            'id', 'name', 'image_url', 'price',
-            'category_name', 'is_available', 'cook_time_minutes'
+            'id', 'name', 'description', 'image_url', 'price', 'price_uzs',
+            'category_id', 'category_name', 'ingredients',
+            'is_available', 'cook_time_minutes', 'sort_order'
         ]
