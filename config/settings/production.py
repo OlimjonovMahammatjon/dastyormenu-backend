@@ -61,6 +61,18 @@ else:
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Media files - serve with WhiteNoise (temporary solution)
+# WARNING: Files will be lost on redeploy! Use S3 for production.
+WHITENOISE_AUTOREFRESH = True
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MIMETYPES = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+}
+
 # Security Settings - Railway uchun optimallashtirilgan
 SECURE_SSL_REDIRECT = False  # Railway o'zi HTTPS ni boshqaradi
 SESSION_COOKIE_SECURE = False  # Railway proxy orqali
