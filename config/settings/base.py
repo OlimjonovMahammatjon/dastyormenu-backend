@@ -30,6 +30,10 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'storages',
     
+    # Cloudinary (must be before django.contrib.staticfiles)
+    'cloudinary_storage',
+    'cloudinary',
+    
     # Local apps
     'apps.organizations',
     'apps.users',
@@ -181,6 +185,16 @@ if USE_S3:
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     AWS_DEFAULT_ACL = 'public-read'
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Cloudinary Storage
+USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
+if USE_CLOUDINARY:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # DRF Spectacular (Swagger)
 SPECTACULAR_SETTINGS = {
