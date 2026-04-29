@@ -186,15 +186,30 @@ if USE_S3:
     AWS_DEFAULT_ACL = 'public-read'
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-# Cloudinary Storage
+# Cloudinary Storage (Professional Image Hosting)
 USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
 if USE_CLOUDINARY:
+    import cloudinary
+    
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
+    
+    # Configure cloudinary
+    cloudinary.config(
+        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+        api_key=os.getenv('CLOUDINARY_API_KEY'),
+        api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+        secure=True
+    )
+    
+    # Use Cloudinary for media files
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    
+    # Media URL will be served from Cloudinary CDN
+    MEDIA_URL = f'https://res.cloudinary.com/{os.getenv("CLOUDINARY_CLOUD_NAME")}/'
 
 # DRF Spectacular (Swagger)
 SPECTACULAR_SETTINGS = {

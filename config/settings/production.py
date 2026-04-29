@@ -86,3 +86,19 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # S3 Storage (optional)
 USE_S3 = os.getenv('USE_S3', 'False') == 'True'
+
+# Cloudinary Settings for Production
+USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') == 'True'
+if USE_CLOUDINARY:
+    # Override MEDIA_URL to use Cloudinary CDN
+    MEDIA_URL = f'https://res.cloudinary.com/{os.getenv("CLOUDINARY_CLOUD_NAME")}/'
+    
+    # Cloudinary transformations for optimized delivery
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+        'SECURE': True,
+        'STATIC_TAG': 'static',
+        'STATICFILES_MANIFEST_ROOT': os.path.join(BASE_DIR, 'manifest'),
+    }

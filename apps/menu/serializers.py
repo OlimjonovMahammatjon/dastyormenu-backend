@@ -30,6 +30,7 @@ class MenuSerializer(serializers.ModelSerializer):
     
     category_name = serializers.CharField(source='category.name', read_only=True)
     price_uzs = serializers.ReadOnlyField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Menu
@@ -43,6 +44,15 @@ class MenuSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'organization': {'required': False}
         }
+    
+    def get_image_url(self, obj):
+        """Get full image URL (Cloudinary or local)."""
+        if obj.image_url:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.image_url.url)
+            return obj.image_url.url
+        return None
     
     def validate_price(self, value: int) -> int:
         """Validate price is positive."""
@@ -63,6 +73,7 @@ class MenuListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_id = serializers.UUIDField(source='category.id', read_only=True)
     price_uzs = serializers.ReadOnlyField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Menu
@@ -71,3 +82,12 @@ class MenuListSerializer(serializers.ModelSerializer):
             'category_id', 'category_name', 'ingredients',
             'is_available', 'cook_time_minutes', 'sort_order'
         ]
+    
+    def get_image_url(self, obj):
+        """Get full image URL (Cloudinary or local)."""
+        if obj.image_url:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.image_url.url)
+            return obj.image_url.url
+        return None

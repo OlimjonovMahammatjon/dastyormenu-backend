@@ -9,7 +9,7 @@ Multi-tenant restaurant management system with real-time order tracking, QR code
 - **Database**: PostgreSQL
 - **Cache/Queue**: Redis
 - **Task Queue**: Celery
-- **Storage**: MinIO (S3-compatible)
+- **Storage**: Cloudinary (CDN) / MinIO (S3-compatible)
 - **Containerization**: Docker + Docker Compose
 
 ## Features
@@ -59,7 +59,27 @@ cd DastyorMenuBackend
 cp .env.example .env
 ```
 
-### 2. Start with Docker
+### 2. Setup Cloudinary (Image Storage) ☁️
+
+**MUHIM:** Rasmlar professional tarzda ishlashi uchun Cloudinary sozlang!
+
+```bash
+# 1. Cloudinary account yarating: https://cloudinary.com (FREE)
+# 2. Dashboard'dan credentials oling
+# 3. .env faylini yangilang:
+
+USE_CLOUDINARY=True
+CLOUDINARY_CLOUD_NAME=sizning-cloud-name
+CLOUDINARY_API_KEY=sizning-api-key
+CLOUDINARY_API_SECRET=sizning-api-secret
+
+# 4. Test qiling
+python test_cloudinary.py
+```
+
+📖 **Batafsil qo'llanma:** `QUICK_START_CLOUDINARY.md` va `CLOUDINARY_SETUP.md`
+
+### 3. Start with Docker
 
 ```bash
 docker-compose up -d
@@ -194,7 +214,9 @@ Key variables:
 - `DEBUG` - Debug mode (True/False)
 - `DB_NAME`, `DB_USER`, `DB_PASSWORD` - Database credentials
 - `REDIS_HOST`, `REDIS_PORT` - Redis connection
-- `AWS_*` - S3/MinIO storage configuration
+- `USE_CLOUDINARY` - Enable Cloudinary storage (True/False)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` - Cloudinary credentials
+- `AWS_*` - S3/MinIO storage configuration (alternative)
 
 ## Deployment
 

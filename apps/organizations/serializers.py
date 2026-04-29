@@ -8,6 +8,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
     
     is_trial_expired = serializers.ReadOnlyField()
     is_subscription_active = serializers.ReadOnlyField()
+    logo = serializers.SerializerMethodField()
     
     class Meta:
         model = Organization
@@ -20,6 +21,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def get_logo(self, obj):
+        """Get full logo URL (Cloudinary or local)."""
+        if obj.logo:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
+    
     def validate_phone(self, value: str) -> str:
         """Validate phone number format."""
         if value and not value.replace('+', '').replace(' ', '').isdigit():
@@ -30,6 +40,17 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class OrganizationListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for organization list."""
     
+    logo = serializers.SerializerMethodField()
+    
     class Meta:
         model = Organization
         fields = ['id', 'name', 'logo', 'subscription_plan', 'subscription_status']
+    
+    def get_logo(self, obj):
+        """Get full logo URL (Cloudinary or local)."""
+        if obj.logo:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
