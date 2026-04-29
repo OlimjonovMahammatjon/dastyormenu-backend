@@ -6,7 +6,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 from .models import Category, Menu
 from .serializers import CategorySerializer, MenuSerializer, MenuListSerializer
 from .mixins import OrganizationMixin
@@ -96,6 +97,79 @@ class MenuViewSet(OrganizationMixin, viewsets.ModelViewSet):
         if self.action == 'list':
             return MenuListSerializer
         return MenuSerializer
+    
+    @extend_schema(
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type': 'string', 'description': 'Menu item name'},
+                    'description': {'type': 'string', 'description': 'Description'},
+                    'price': {'type': 'integer', 'description': 'Price in UZS tiyin'},
+                    'category': {'type': 'string', 'format': 'uuid', 'description': 'Category UUID'},
+                    'image': {'type': 'string', 'format': 'binary', 'description': 'Image file (JPG, PNG, GIF, WebP)'},
+                    'cook_time_minutes': {'type': 'integer', 'description': 'Cooking time in minutes'},
+                    'ingredients': {'type': 'string', 'description': 'Ingredients list'},
+                    'is_available': {'type': 'boolean', 'description': 'Availability status'},
+                    'sort_order': {'type': 'integer', 'description': 'Sort order'},
+                },
+                'required': ['name', 'price', 'category']
+            }
+        },
+        responses={201: MenuSerializer},
+        description='Create menu item with image upload to ImgBB'
+    )
+    def create(self, request, *args, **kwargs):
+        """Create menu item with image upload."""
+        return super().create(request, *args, **kwargs)
+    
+    @extend_schema(
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type': 'string', 'description': 'Menu item name'},
+                    'description': {'type': 'string', 'description': 'Description'},
+                    'price': {'type': 'integer', 'description': 'Price in UZS tiyin'},
+                    'category': {'type': 'string', 'format': 'uuid', 'description': 'Category UUID'},
+                    'image': {'type': 'string', 'format': 'binary', 'description': 'New image file (JPG, PNG, GIF, WebP)'},
+                    'cook_time_minutes': {'type': 'integer', 'description': 'Cooking time in minutes'},
+                    'ingredients': {'type': 'string', 'description': 'Ingredients list'},
+                    'is_available': {'type': 'boolean', 'description': 'Availability status'},
+                    'sort_order': {'type': 'integer', 'description': 'Sort order'},
+                }
+            }
+        },
+        responses={200: MenuSerializer},
+        description='Update menu item with optional new image upload to ImgBB'
+    )
+    def update(self, request, *args, **kwargs):
+        """Update menu item with optional new image."""
+        return super().update(request, *args, **kwargs)
+    
+    @extend_schema(
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type': 'string', 'description': 'Menu item name'},
+                    'description': {'type': 'string', 'description': 'Description'},
+                    'price': {'type': 'integer', 'description': 'Price in UZS tiyin'},
+                    'category': {'type': 'string', 'format': 'uuid', 'description': 'Category UUID'},
+                    'image': {'type': 'string', 'format': 'binary', 'description': 'New image file (JPG, PNG, GIF, WebP)'},
+                    'cook_time_minutes': {'type': 'integer', 'description': 'Cooking time in minutes'},
+                    'ingredients': {'type': 'string', 'description': 'Ingredients list'},
+                    'is_available': {'type': 'boolean', 'description': 'Availability status'},
+                    'sort_order': {'type': 'integer', 'description': 'Sort order'},
+                }
+            }
+        },
+        responses={200: MenuSerializer},
+        description='Partial update menu item with optional new image upload to ImgBB'
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Partial update menu item with optional new image."""
+        return super().partial_update(request, *args, **kwargs)
     
     @extend_schema(
         request=None,
