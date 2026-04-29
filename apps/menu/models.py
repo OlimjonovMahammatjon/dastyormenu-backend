@@ -70,7 +70,7 @@ class Menu(models.Model):
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    image_url = models.ImageField(upload_to='menu/items/', null=True, blank=True)
+    image_url = models.URLField(max_length=500, null=True, blank=True, help_text='ImgBB image URL')
     price = models.IntegerField(help_text='Price in UZS tiyin')
     cook_time_minutes = models.IntegerField(default=15)
     ingredients = models.TextField(blank=True)

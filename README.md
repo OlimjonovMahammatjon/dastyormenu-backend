@@ -9,7 +9,7 @@ Multi-tenant restaurant management system with real-time order tracking, QR code
 - **Database**: PostgreSQL
 - **Cache/Queue**: Redis
 - **Task Queue**: Celery
-- **Storage**: Cloudinary (CDN) / MinIO (S3-compatible)
+- **Storage**: ImgBB (Free Image Hosting) / MinIO (S3-compatible)
 - **Containerization**: Docker + Docker Compose
 
 ## Features
@@ -59,25 +59,20 @@ cd DastyorMenuBackend
 cp .env.example .env
 ```
 
-### 2. Setup Cloudinary (Image Storage) ☁️
+### 2. Setup ImgBB (Image Storage) 🖼️
 
-**MUHIM:** Rasmlar professional tarzda ishlashi uchun Cloudinary sozlang!
+**MUHIM:** Rasmlar uchun ImgBB allaqachon sozlangan!
 
+ImgBB API key `.env` faylida mavjud:
 ```bash
-# 1. Cloudinary account yarating: https://cloudinary.com (FREE)
-# 2. Dashboard'dan credentials oling
-# 3. .env faylini yangilang:
-
-USE_CLOUDINARY=True
-CLOUDINARY_CLOUD_NAME=sizning-cloud-name
-CLOUDINARY_API_KEY=sizning-api-key
-CLOUDINARY_API_SECRET=sizning-api-secret
-
-# 4. Test qiling
-python test_cloudinary.py
+IMGBB_API_KEY=2998ee7a1b155391fcfc99e21d4c92d6
 ```
 
-📖 **Batafsil qo'llanma:** `QUICK_START_CLOUDINARY.md` va `CLOUDINARY_SETUP.md`
+✅ Uzbekistonda ishlaydi
+✅ Bepul va cheklovsiz
+✅ Tez va oson
+
+📖 **Batafsil qo'llanma:** `IMGBB_SETUP.md`
 
 ### 3. Start with Docker
 
@@ -214,8 +209,7 @@ Key variables:
 - `DEBUG` - Debug mode (True/False)
 - `DB_NAME`, `DB_USER`, `DB_PASSWORD` - Database credentials
 - `REDIS_HOST`, `REDIS_PORT` - Redis connection
-- `USE_CLOUDINARY` - Enable Cloudinary storage (True/False)
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` - Cloudinary credentials
+- `IMGBB_API_KEY` - ImgBB image hosting API key (already configured)
 - `AWS_*` - S3/MinIO storage configuration (alternative)
 
 ## Deployment

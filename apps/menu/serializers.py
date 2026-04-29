@@ -1,6 +1,39 @@
 """Menu serializers."""
+import base64
+import requests
 from rest_framework import serializers
+from django.conf import settings
 from .models import Category, Menu
+
+
+def upload_to_imgbb(image_file):
+    """Upload image to ImgBB and return URL."""
+    try:
+        # Read and encode image
+        image_data = image_file.read()
+        encoded_image = base64.b64encode(image_data).decode('utf-8')
+        
+        # Upload to ImgBB
+        payload = {
+            'key': settings.IMGBB_API_KEY,
+            'image': encoded_image,
+            'name': image_file.name
+        }
+        
+        response = requests.post(settings.IMGBB_API_URL, data=payload, timeout=30)
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        if result.get('success'):
+            return result['data']['url']
+        else:
+            raise serializers.ValidationError(f"ImgBB upload failed: {result}")
+            
+    except requests.exceptions.RequestException as e:
+        raise serializers.ValidationError(f"Failed to upload image: {str(e)}")
+    except Exception as e:
+        raise serializers.ValidationError(f"Image upload error: {str(e)}")
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -30,29 +63,41 @@ class MenuSerializer(serializers.ModelSerializer):
     
     category_name = serializers.CharField(source='category.name', read_only=True)
     price_uzs = serializers.ReadOnlyField()
-    image_url = serializers.SerializerMethodField()
+    image = serializers.ImageField(write_only=True, required=False, help_text='Upload image file')
+    image_url = serializers.URLField(read_only=True)
     
     class Meta:
         model = Menu
         fields = [
             'id', 'organization', 'category', 'category_name',
-            'name', 'description', 'image_url', 'price', 'price_uzs',
+            'name', 'description', 'image', 'image_url', 'price', 'price_uzs',
             'cook_time_minutes', 'ingredients', 'is_available',
             'sort_order', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'image_url']
         extra_kwargs = {
             'organization': {'required': False}
         }
     
-    def get_image_url(self, obj):
-        """Get full image URL (Cloudinary or local)."""
-        if obj.image_url:
-            request = self.context.get('request')
-            if request is not None:
-                return request.build_absolute_uri(obj.image_url.url)
-            return obj.image_url.url
-        return None
+    def create(self, validated_data):
+        """Create menu item with ImgBB image upload."""
+        image_file = validated_data.pop('image', None)
+        
+        # Upload image to ImgBB if provided
+        if image_file:
+            validated_data['image_url'] = upload_to_imgbb(image_file)
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Update menu item with ImgBB image upload."""
+        image_file = validated_data.pop('image', None)
+        
+        # Upload new image to ImgBB if provided
+        if image_file:
+            validated_data['image_url'] = upload_to_imgbb(image_file)
+        
+        return super().update(instance, validated_data)
     
     def validate_price(self, value: int) -> int:
         """Validate price is positive."""
@@ -73,7 +118,6 @@ class MenuListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_id = serializers.UUIDField(source='category.id', read_only=True)
     price_uzs = serializers.ReadOnlyField()
-    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Menu
@@ -82,12 +126,3 @@ class MenuListSerializer(serializers.ModelSerializer):
             'category_id', 'category_name', 'ingredients',
             'is_available', 'cook_time_minutes', 'sort_order'
         ]
-    
-    def get_image_url(self, obj):
-        """Get full image URL (Cloudinary or local)."""
-        if obj.image_url:
-            request = self.context.get('request')
-            if request is not None:
-                return request.build_absolute_uri(obj.image_url.url)
-            return obj.image_url.url
-        return None

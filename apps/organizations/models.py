@@ -29,7 +29,7 @@ class Organization(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    logo = models.ImageField(upload_to='organizations/logos/', null=True, blank=True)
+    logo = models.URLField(max_length=500, null=True, blank=True, help_text='ImgBB logo URL')
     address = models.TextField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     
