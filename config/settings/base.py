@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     'storages',
+    'corsheaders',  # CORS support
     
     # Local apps
     'apps.organizations',
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS - eng yuqorida bo'lishi kerak
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -197,3 +199,32 @@ SPECTACULAR_SETTINGS = {
 
 # App Settings
 BASE_URL = os.getenv('BASE_URL', 'https://dastyor.uz')
+
+# CORS Settings - Development uchun barcha linklarga ochiq
+CORS_ALLOW_ALL_ORIGINS = True  # Barcha domenlardan so'rovlarga ruxsat
+CORS_ALLOW_CREDENTIALS = True  # Cookie va authentication headerlariga ruxsat
+
+# Agar kerak bo'lsa, qo'shimcha sozlamalar
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# CSRF Settings - Development uchun
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:3000,http://localhost:8000').split(',')
